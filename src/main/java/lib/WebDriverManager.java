@@ -1,13 +1,10 @@
-package lib.webdriver;
+package lib;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.LocalFileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -26,11 +23,12 @@ import java.util.logging.Level;
 
 /**
  * @author Kateryna
+ * Class creates instances of webdrivers, manage access to them from threads and close them eventually
  */
-public class WebDriverCreator {
+public class WebDriverManager {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(WebDriverCreator.class);
+            LoggerFactory.getLogger(WebDriverManager.class);
 
     final private static String CONFIG_FILE = "config.properties";
 
@@ -44,7 +42,7 @@ public class WebDriverCreator {
      */
     final private static String downloadDirPath = new File("").getAbsolutePath() + File.separator + "files"
             + File.separator + "download";
-    private static final ThreadLocal<WebDriver> webDriver = new InheritableThreadLocal<WebDriver>();
+    private static final ThreadLocal<WebDriver> webDriver = new InheritableThreadLocal<>();
     /**
      * Selenium Grid URL
      */
@@ -55,19 +53,19 @@ public class WebDriverCreator {
     private static byte[] screen;
 
     /**
-     * Gets instance of lib.webdriver for current thread. Starts new if it doesn't
+     * Gets instance of webdriver for current thread. Starts new if it doesn't
      * exist.
      *
-     * @return
+     * @return Webdriver instance
      */
     public static WebDriver getWebDriver() {
         if (webDriver.get() == null || ((RemoteWebDriver) webDriver.get()).getSessionId() == null) {
             setProperties();
             if (gridHost.equals("none")) {
-                webDriver.set(WebDriverCreator.getChromeDriver());
+                webDriver.set(WebDriverManager.getChromeDriver());
             } else {
                 try {
-                    webDriver.set(WebDriverCreator.getGridChromeDriver());
+                    webDriver.set(WebDriverManager.getGridChromeDriver());
                 } catch (MalformedURLException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -79,14 +77,14 @@ public class WebDriverCreator {
 
     /**
      * Creates new browser session in same test. It can be used for scenarios with concurrent sessions.
-     * @return
+     * @return Webdriver instance
      */
     public static WebDriver getNewSession() {
         if (gridHost.equals("none")) {
-            return WebDriverCreator.getChromeDriver();
+            return WebDriverManager.getChromeDriver();
         } else {
             try {
-                return WebDriverCreator.getGridChromeDriver();
+                return WebDriverManager.getGridChromeDriver();
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -97,14 +95,13 @@ public class WebDriverCreator {
 
     /**
      * Returns list of cookies of browser session
-     * @return
+     * @return list of Cookies
      */
     public static List<Cookie> getCookies() {
-        List<Cookie> appachCookies = new ArrayList<Cookie>();
+        List<Cookie> appachCookies = new ArrayList<>();
         getWebDriver().manage().getCookies().forEach(cookie ->
-        {
-            appachCookies.add(new Cookie(cookie.getName(), cookie.getValue()));
-        });
+            appachCookies.add(new Cookie(cookie.getName(), cookie.getValue()))
+        );
         return appachCookies;
     }
 
@@ -112,15 +109,15 @@ public class WebDriverCreator {
      * Closes browser windows and kills browser process.
      */
     public static void driverQuite() {
-        getWebDriver().close();
         getWebDriver().quit();
-        WebDriverCreator.webDriver.remove();
+        WebDriverManager.webDriver.remove();
+        LOGGER.info("Webdriver is closed");
+
     }
 
     private static ChromeOptions getChromeOptions() {
-        HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
+        HashMap<String, Object> chromePrefs = new HashMap<>();
         chromePrefs.put("download.prompt_for_download", false);
-        chromePrefs.put("profile.default_content_settings.dialogs", 0);
         chromePrefs.put("download.default_directory", downloadDirPath);
         chromePrefs.put("profile.default_content_setting_values.dialogs", 1);
         chromePrefs.put("profile.default_content_settings.dialogs", 1);
@@ -134,17 +131,14 @@ public class WebDriverCreator {
     }
 
     private static WebDriver getChromeDriver() {
-        WebDriverManager.chromedriver().setup();
-
-        System.setProperty("lib.webdriver.chrome.args", "--disable-logging");
-        System.setProperty("lib.webdriver.chrome.silentOutput", "true");
+        io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
 
         ChromeOptions capabilities = getChromeOptions();
         LoggingPreferences prefs = new LoggingPreferences();
 
         prefs.enable(LogType.BROWSER, Level.SEVERE);
-        capabilities.setCapability(CapabilityType.LOGGING_PREFS, prefs);
         WebDriver driver = new ChromeDriver(capabilities);
+        LOGGER.info("Chrome driver is started");
         return driver;
     }
 
@@ -153,8 +147,6 @@ public class WebDriverCreator {
         ChromeOptions capabilities = getChromeOptions();
         LoggingPreferences prefs = new LoggingPreferences();
         prefs.enable(LogType.BROWSER, Level.OFF);
-        capabilities.setCapability(CapabilityType.LOGGING_PREFS, prefs);
-        capabilities.setCapability(CapabilityType.TAKES_SCREENSHOT, true);
         LOGGER.info(String.format("Grid URL: [%s]", gridHost));
         for (int i = 0; i < 10 && driver == null; i++) {
             try {
@@ -165,7 +157,6 @@ public class WebDriverCreator {
                     throw e;
                 }
                 LOGGER.info("Selenium node is not reachable.");
-                continue;
             }
         }
         driver.setFileDetector(new LocalFileDetector());
@@ -178,7 +169,7 @@ public class WebDriverCreator {
 
         Properties properties = new Properties();
         try {
-            properties.load(WebDriverCreator.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
+            properties.load(WebDriverManager.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -187,7 +178,7 @@ public class WebDriverCreator {
     }
 
     public synchronized static void makeScreen() {
-        TakesScreenshot takesScreenshot = (TakesScreenshot) WebDriverCreator.getWebDriver();
+        TakesScreenshot takesScreenshot = (TakesScreenshot) WebDriverManager.getWebDriver();
         screen = takesScreenshot.getScreenshotAs(OutputType.BYTES);
     }
 
