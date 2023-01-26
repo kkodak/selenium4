@@ -22,6 +22,9 @@ public abstract class Page {
 
     abstract public void init();
 
+    protected Object executeScript(String script, Object... args) {
+        return ((JavascriptExecutor) webDriver).executeScript(script, args);
+    }
 
 
 }

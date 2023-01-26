@@ -61,7 +61,7 @@ public class WebDriverManager {
     public static WebDriver getWebDriver() {
         if (webDriver.get() == null || ((RemoteWebDriver) webDriver.get()).getSessionId() == null) {
             setProperties();
-            if (gridHost.equals("none")) {
+            if (gridHost == null || gridHost.equals("none")) {
                 webDriver.set(WebDriverManager.getChromeDriver());
             } else {
                 try {
@@ -77,10 +77,11 @@ public class WebDriverManager {
 
     /**
      * Creates new browser session in same test. It can be used for scenarios with concurrent sessions.
+     *
      * @return Webdriver instance
      */
     public static WebDriver getNewSession() {
-        if (gridHost.equals("none")) {
+        if (gridHost == null || gridHost.equals("none")) {
             return WebDriverManager.getChromeDriver();
         } else {
             try {
@@ -95,12 +96,13 @@ public class WebDriverManager {
 
     /**
      * Returns list of cookies of browser session
+     *
      * @return list of Cookies
      */
     public static List<Cookie> getCookies() {
         List<Cookie> appachCookies = new ArrayList<>();
         getWebDriver().manage().getCookies().forEach(cookie ->
-            appachCookies.add(new Cookie(cookie.getName(), cookie.getValue()))
+                appachCookies.add(new Cookie(cookie.getName(), cookie.getValue()))
         );
         return appachCookies;
     }
