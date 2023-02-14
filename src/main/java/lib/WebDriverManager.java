@@ -43,10 +43,7 @@ public class WebDriverManager {
     final private static String downloadDirPath = new File("").getAbsolutePath() + File.separator + "files"
             + File.separator + "download";
     private static final ThreadLocal<WebDriver> webDriver = new InheritableThreadLocal<>();
-    /**
-     * Selenium Grid URL
-     */
-    private static String gridHost;
+
     /**
      * Screen which is made after test, will be attached to test if it fails
      */
@@ -61,16 +58,7 @@ public class WebDriverManager {
     public static WebDriver getWebDriver() {
         if (webDriver.get() == null || ((RemoteWebDriver) webDriver.get()).getSessionId() == null) {
             setProperties();
-            if (gridHost == null || gridHost.equals("none")) {
-                webDriver.set(WebDriverManager.getChromeDriver());
-            } else {
-                try {
-                    webDriver.set(WebDriverManager.getGridChromeDriver());
-                } catch (MalformedURLException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
+            webDriver.set(WebDriverManager.getChromeDriver());
         }
         return webDriver.get();
     }
@@ -78,21 +66,12 @@ public class WebDriverManager {
     /**
      * Creates new browser session in same test. It can be used for scenarios with concurrent sessions.
      *
-     * @return Webdriver instance
      */
-    public static WebDriver getNewSession() {
-        if (gridHost == null || gridHost.equals("none")) {
-            return WebDriverManager.getChromeDriver();
-        } else {
-            try {
-                return WebDriverManager.getGridChromeDriver();
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        return null;
+    public static void getNewSession() {
+        getWebDriver().switchTo().newWindow(WindowType.WINDOW);
     }
+
+
 
     /**
      * Returns list of cookies of browser session
@@ -144,31 +123,10 @@ public class WebDriverManager {
         return driver;
     }
 
-    private static WebDriver getGridChromeDriver() throws MalformedURLException {
-        RemoteWebDriver driver = null;
-        ChromeOptions capabilities = getChromeOptions();
-        LoggingPreferences prefs = new LoggingPreferences();
-        prefs.enable(LogType.BROWSER, Level.OFF);
-        LOGGER.info(String.format("Grid URL: [%s]", gridHost));
-        for (int i = 0; i < 10 && driver == null; i++) {
-            try {
-                driver = new RemoteWebDriver(new URL(gridHost), capabilities);
-                LOGGER.info("Remote driver defined");
-            } catch (WebDriverException e) {
-                if (i == 9) {
-                    throw e;
-                }
-                LOGGER.info("Selenium node is not reachable.");
-            }
-        }
-        driver.setFileDetector(new LocalFileDetector());
-        return driver;
-    }
 
     public static synchronized void setProperties() {
         /* Set logger */
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.Jdk14Logger");
-
         Properties properties = new Properties();
         try {
             properties.load(WebDriverManager.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
@@ -176,12 +134,11 @@ public class WebDriverManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        gridHost = properties.getProperty("grid");
     }
 
-    public synchronized static void makeScreen() {
+    public synchronized static byte[] makeScreen() {
         TakesScreenshot takesScreenshot = (TakesScreenshot) WebDriverManager.getWebDriver();
-        screen = takesScreenshot.getScreenshotAs(OutputType.BYTES);
+        return screen = takesScreenshot.getScreenshotAs(OutputType.BYTES);
     }
 
     public static byte[] getScreen() {

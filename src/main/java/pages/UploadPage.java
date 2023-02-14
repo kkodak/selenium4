@@ -23,7 +23,6 @@ public class UploadPage extends Page {
 
     public UploadPage(WebDriver webDriver) {
         super(webDriver);
-
     }
 
     @Override

@@ -15,10 +15,6 @@ import static org.junit.Assert.assertEquals;
 public class UploadFiles {
     private UploadPage uploadPage;
 
-    @Given("^Open \"([^\"]*)\"?")
-    public void openLink(String link) {
-        WebDriverManager.getWebDriver().get(link);
-    }
 
     @When("Upload file {string}")
     public void upload_file(String fileName) {
@@ -30,7 +26,7 @@ public class UploadFiles {
 
     @Then("Message that {string} file has been upload appears")
     public void messageUploaded(String fileName) {
-        assertEquals( "File Uploaded!",uploadPage.getHeaderMsg());
+        assertEquals("File Uploaded!", uploadPage.getHeaderMsg());
         assertEquals(fileName, uploadPage.getUploadedFileName());
     }
 }

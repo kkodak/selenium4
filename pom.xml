@@ -79,6 +79,7 @@
         </dependency>
 
 
+
     </dependencies>
 
     <profiles>
@@ -88,17 +89,10 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <grid>none</grid>
-            </properties>
+
         </profile>
 
 
-        <profile>
-            <id>grid</id>
-            <properties>
-                <grid>http://test:5545/wd/hub</grid>
-            </properties>
-        </profile>
+
     </profiles>
 </project>

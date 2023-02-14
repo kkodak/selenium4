@@ -10,9 +10,8 @@ public class Hooks {
     @After
     public void afterScenario(Scenario scenario) {
         if (scenario.isFailed()) {
-            WebDriverManager.makeScreen();
-            byte[] screenshot = WebDriverManager.getScreen();
-            scenario.attach( screenshot,"image/png", "name");
+            byte[] screenshot = WebDriverManager.makeScreen();
+            scenario.attach(screenshot, "image/png", "name");
         }
         WebDriverManager.driverQuite();
 
