@@ -87,6 +87,13 @@ public class WebDriverManager {
     }
 
     /**
+     * Removes all cookies in browser session
+     */
+    public static void deleteCookies(){
+        getWebDriver().manage().deleteAllCookies();
+    }
+
+    /**
      * Closes browser windows and kills browser process.
      */
     public static void driverQuite() {

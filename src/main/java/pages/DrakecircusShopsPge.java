@@ -1,6 +1,7 @@
 package pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DrakecircusShopsPge extends Page {
+    private By acceptAllBtn = By.cssSelector("button[data-testid='uc-accept-all-button']");
+
 
     @FindBy(id = "usercentrics-root")
     private WebElement shadowBlock;
@@ -24,9 +27,18 @@ public class DrakecircusShopsPge extends Page {
     }
 
     public void acceptAllCookies() {
-        By acceptAllBtn = By.cssSelector("button[data-testid='uc-accept-all-button']");
         wait.until((WebDriver d) -> shadowBlock.getShadowRoot().findElements(acceptAllBtn).size() != 0);
         shadowBlock.getShadowRoot().findElement(acceptAllBtn).click();
+    }
+
+    public boolean isCookiesPopupShown() {
+        try {
+            return wait.until((WebDriver d) ->
+                    shadowBlock.getShadowRoot().findElements(acceptAllBtn).size() != 0 &&
+                    shadowBlock.getShadowRoot().findElement(acceptAllBtn).isDisplayed());
+        } catch (TimeoutException e) {
+            return false;
+        }
     }
 
     public List<List<String>> getShopsInfo() {

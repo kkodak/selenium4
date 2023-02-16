@@ -7,7 +7,8 @@ import org.junit.runner.RunWith;
         features = {
                 "src/test/resources/features/interceptor.feature",
                 "src/test/resources/features/upload.feature",
-                "src/test/resources/features/download.feature"
+                "src/test/resources/features/download.feature",
+                "src/test/resources/features/new_window.feature"
         },
         plugin = {"pretty", "html:target/cucumber-reports.html"}
 
